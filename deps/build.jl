@@ -1,5 +1,5 @@
 using Compat
-@static if is_windows()
+@static if Sys.iswindows()
     using WinRPM
     WinRPM.install("gcc", yes=true)
     WinRPM.install("winpthreads-devel", yes=true)
