@@ -27,7 +27,7 @@ function Executable(exename, targetdir, debug)
         exename = exename * "-debug"
     end
     filename = exename
-    @static if is_windows()
+    @static if Sys.iswindows()
         filename = filename * ".exe"
     end
     buildfile = abspath(joinpath(JULIA_HOME, filename))
@@ -55,7 +55,7 @@ end
 function build_executable(exename, script_file, targetdir=nothing, cpu_target="native";
                           force=false, debug=false)
     julia = abspath(joinpath(JULIA_HOME, debug ? "julia-debug" : "julia"))
-    if !isfile(julia * (is_windows() ? ".exe" : ""))
+    if !isfile(julia * (Sys.iswindows() ? ".exe" : ""))
         println("ERROR: file '$(julia)' not found.")
         return 1
     end
@@ -70,7 +70,7 @@ function build_executable(exename, script_file, targetdir=nothing, cpu_target="n
 
     if targetdir != nothing
         patchelf = find_patchelf()
-        if patchelf == nothing && !(is_windows())
+        if patchelf == nothing && !(Sys.iswindows())
             println("ERROR: Using the 'targetdir' option requires the 'patchelf' utility. Please install it.")
             return 1
         end
@@ -117,12 +117,12 @@ function build_executable(exename, script_file, targetdir=nothing, cpu_target="n
     gcc = find_system_gcc()
     win_arg = ``
     # This argument is needed for the gcc, see issue #9973
-    @static if is_windows()
+    @static if Sys.iswindows()
 	    win_arg = Sys.WORD_SIZE==32 ? `-D_WIN32_WINNT=0x0502 -march=pentium4` : `-D_WIN32_WINNT=0x0502`
     end
     incs = get_includes()
     ENV2 = deepcopy(ENV)
-    @static if is_windows()
+    @static if Sys.iswindows()
         if contains(gcc, "WinRPM")
             # This should not bee necessary, it is done due to WinRPM's gcc's
             # include paths is not correct see WinRPM.jl issue #38
@@ -243,7 +243,7 @@ function emit_cmain(cfile, exename, relocation)
         arr = "jl_alloc_cell_1d"
         str = "jl_utf8_string_type"
     end
-    ext = (VERSION < v"0.5" &&  is_windows()) ? "ji" : Libdl.dlext
+    ext = (VERSION < v"0.5" &&  Sys.iswindows()) ? "ji" : Libdl.dlext
     f = open(cfile, "w")
     write( f, """
         #include <julia.h>
@@ -322,7 +322,7 @@ end
 
 function find_system_gcc()
     # On Windows, check to see if WinRPM is installed, and if so, see if gcc is installed
-    @static if is_windows()
+    @static if Sys.iswindows()
         try
             winrpmgcc = joinpath(WinRPM.installdir,"usr","$(Sys.ARCH)-w64-mingw32",
                 "sys-root","mingw","bin","gcc.exe")
@@ -341,7 +341,7 @@ function find_system_gcc()
         end
     end
 
-    error( "GCC not found on system: " * (is_windows() ? "GCC can be installed via `Pkg.add(\"WinRPM\"); WinRPM.install(\"gcc\")`" : "" ))
+    error( "GCC not found on system: " * (Sys.iswindows() ? "GCC can be installed via `Pkg.add(\"WinRPM\"); WinRPM.install(\"gcc\")`" : "" ))
 end
 
 end # module
